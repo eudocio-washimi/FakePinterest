@@ -13,7 +13,7 @@ def homepage():
         usuario = Usuario.query.filter_by(email=form_login.email.data).first()
         if usuario and bcrypt.check_password_hash(usuario.senha, form_login.senha.data):
             login_user(usuario)
-            return redirect(url_for("perfil", usuario=usuario.username))
+            return redirect(url_for("perfil", id_usuario=usuario.id))
     return render_template("homepage.html", form=form_login)
 
 @app.route("/cadastro", methods=["GET","POST"])
@@ -27,14 +27,20 @@ def cadastro():
         database.session.add(usuario)
         database.session.commit()
         login_user(usuario, remember=True)
-        return redirect(url_for("perfil", usuario=usuario.username))
+        return redirect(url_for("perfil", id_usuario=usuario.id))
     return render_template("cadastro.html", form=form_cadastro)
 
 
-@app.route("/perfil/<usuario>")
+@app.route("/perfil/<id_usuario>")
 @login_required
-def perfil(usuario):
-    return render_template("perfil.html", usuario=usuario)
+def perfil(id_usuario):
+    if int(id_usuario) == int(current_user.id):
+        # o usuário está visualizando o próprio perfil
+        return render_template("perfil.html", usuario=current_user)
+    else:
+        # está visualizando o perfil de um terceiro
+        usuario = Usuario.query.get(int(id_usuario))
+        return render_template("perfil.html", usuario=usuario)
 
 
 @app.route("/logout")
